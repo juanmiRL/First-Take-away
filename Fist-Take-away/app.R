@@ -2,18 +2,30 @@
 
 library(shiny)
 library(tidyverse)
-library(shinydashboard)
 library(shinyjs)
 library(shinythemes)
 library(plotly)
 library(DT)
+library(reticulate)
 
-# Define UI for application that draws a histogram
+devtools::install_git("https://github.com/bernardo-dauria/kaggler.git")
+library(readr)
+library(kaggler)
+kgl_auth(username:"juannmi86",key:"8e8a6dd50edcd417a545f9d8b1c26765")
+
+reticulate::use_python("C:/Users/juanm/AppData/Local/r-miniconda/envs/r-reticulate/python.exe")
+reticulate::py_config()
+kaggle <- import("kaggle")
+kaggle$api$authenticate()
+kaggle$api$dataset_download_files("mathchi/diabetes-data-set", "diabetes.csv", unzip = T)
+kaggle$api$dataset_download_files("jsphyg/weather-dataset-rattle-package", "weatherAUS.csv", unzip = T)
+
+# Define UI 
 ui <- fluidPage(
   
   navbarPage("Classification Shiny app",
              theme = shinytheme("superhero")
-             ,#theme
+             , #theme
              tabPanel("Data Description",
                       fluidPage(
                         mainPanel(
