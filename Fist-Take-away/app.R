@@ -26,6 +26,15 @@ library(readr)
 data <- read.csv("https://raw.githubusercontent.com/juanmiRL/First-Take-away/main/Fist-Take-away/diabetes.csv")
 bank <- read.csv("https://raw.githubusercontent.com/juanmiRL/First-Take-away/main/Fist-Take-away/bank.csv")
 
+# create a function to generate na`s in the data 
+generate_na <- function(data){
+last_column <- length(data)
+target <- data[last_column]
+data <- data[,-last_column]
+data <- as.data.frame(lapply(data, function(x) 
+  "is.na<-"(x, sample(seq(x), floor(length(x) * runif(1, 0, .2))))))
+data <- cbind(data,target)
+}
 
 # Define UI 
 ui <- fluidPage(
@@ -34,13 +43,14 @@ ui <- fluidPage(
              theme = shinytheme("yeti")
              , #theme
              tabPanel("Data Description",
-                      fluidPage(
+                      fluidPage(fileInput("file",h3("Upload the file")), 
+                                  
                         mainPanel(
                           tabsetPanel(type = "pills", 
-                                      tabPanel("Table", DT::dataTableOutput("datatable")),
-                                      tabPanel("Data Description", tableOutput("data_desc")),
-                                      tabPanel("Summary", tableOutput("summary")),
-                                      tabPanel("Numeric Variables", tableOutput("numeric"))
+                                      tabPanel("Table",br(), DT::dataTableOutput("datatable")),
+                                      tabPanel("Data Description",br(), tableOutput("data_desc")),
+                                      tabPanel("Summary",br(), tableOutput("summary")),
+                                      tabPanel("Numeric Variables",br(), tableOutput("numeric"))
                                       
                                       
                           )
@@ -49,12 +59,26 @@ ui <- fluidPage(
                       fluidPage(
                         mainPanel(tabsetPanel(type = "pills",
                                               tabPanel("Transform variable", 
-                                                       sidebarPanel(position = "right",
-                                                                    selectInput("select", label = h3("Select feature"), 
-                                                                                choices = names(data),
-                                                                                selected = 1))
+                                                       wellPanel(
+                                                             selectInput("select", label = h3("Select feature"), 
+                                                                                choices = colnames(data),
+                                                                                selected = 1),
+                                                             br(),
+                                                             checkboxGroupInput("transform",label = h3("Select a type"), choices = list("Factor","Integer","Numeric","Character")),br(),
+                                                             actionButton("Gotransform", "Carry out the transform", class = "btn-success"),br()
+                                                            
+                                                            
+                                                       )
+                                                                    
                                                        ),
                                               tabPanel("Detect NA`s", plotOutput("plotna")),
+                                              tabPanel("Create NA`s",
+                                                       br(),
+                                                       br(),
+                                                       actionButton("na", "Click to generate missing values in the data", 
+                                                                    class = "btn-success"),
+                                                       br(),
+                                                       plotOutput("plotna2")),
                                               tabPanel("Imput NA`s", plotOutput("age"))
                                               
                         )
@@ -108,6 +132,16 @@ server <- function(input, output) {
                                            title = "Missing values in the data set",
                                            ggtheme = theme_minimal(),
                                            theme_config = list(legend.position = c("bottom"))))
+  
+  
+  output$plotna2 <- renderPlot(plot_missing(data,group = list(Good = 0.05, OK = 0.4, Bad = 0.8, Remove = 1),
+                                           missing_only = FALSE,
+                                           geom_label_args = list(),
+                                           title = "Missing values in the data set",
+                                           ggtheme = theme_minimal(),
+                                           theme_config = list(legend.position = c("bottom"))))
+  cols_to_change <- reactive({colnames(data)})
+  
   
   
   
