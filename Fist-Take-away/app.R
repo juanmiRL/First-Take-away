@@ -1,5 +1,6 @@
 #library(tidyverse)
 library(shiny)
+library(mice)
 library(dplyr)
 library(funModeling)
 library(DataExplorer)
@@ -20,11 +21,10 @@ library(reticulate)
 #kaggle <- import("kaggle")
 #kaggle$api$authenticate()
 #kaggle$api$dataset_download_files("mathchi/diabetes-data-set", "diabetes.csv", unzip = T)
-#kaggle$api$dataset_download_files("jsphyg/weather-dataset-rattle-package", "weatherAUS.csv", unzip = T)
+
 
 library(readr)
 data <- read.csv("https://raw.githubusercontent.com/juanmiRL/First-Take-away/main/Fist-Take-away/diabetes.csv")
-bank <- read.csv("https://raw.githubusercontent.com/juanmiRL/First-Take-away/main/Fist-Take-away/bank.csv")
 
 # create a function to generate na`s in the data 
 generate_na <- function(data){
@@ -72,7 +72,15 @@ ui <- fluidPage(
                                                                     class = "btn-success"),
                                                        hr(),
                                                        plotOutput("plotna")),
-                                              tabPanel("Imput NA`s"
+                                              tabPanel("Impute NA`s",
+                                                       br(),
+                                                       p(strong("Note that once you click in the button below the Data Description changes also.")),
+                                                       wellPanel(
+                                                       
+                                                       sliderInput("numberk","Number of neighboors in KNN", min = 1,max = 10,value = 5),
+                                                       actionButton("imputena", "Click to impute missing values with mice", 
+                                                                    class = "btn-success")
+                                                       )
                                                        ),
                                               tabPanel("Transform variable", 
                                                        br(),
@@ -146,12 +154,13 @@ server <- function(input, output) {
       v$data[, input$class_var] <- as.factor(v$data[, input$class_var])
     } else if( input$choose_class == "Character"){
       v$data[, input$class_var] <- as.character(v$data[, input$class_var])
-    }
+    } 
   })
   
   
-  observeEvent(input$gotransform, {
-    v$data %>% mutate(input$select, data)
+  observeEvent(input$imputena, {
+    v$data <- mice(data, k=input$numberk)
+    v$data <- complete(v$data)
   })  
   
   observeEvent(input$na, {
