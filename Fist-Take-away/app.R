@@ -65,20 +65,20 @@ ui <- fluidPage(
                                                                                 selected = 1),
                                                              br(),
                                                              checkboxGroupInput("transform",label = h3("Select a type"), choices = list("Factor","Integer","Numeric","Character")),br(),
-                                                             actionButton("Gotransform", "Carry out the transform", class = "btn-success"),br()
+                                                             actionButton("Gotransform", "Carry out the transformation", class = "btn-success"),br()
                                                             
                                                             
                                                        )
                                                                     
                                                        ),
-                                              tabPanel("Detect NA`s", plotOutput("plotna")),
-                                              tabPanel("Create NA`s",
+                                        
+                                              tabPanel("Detect and create NA`s",
                                                        br(),
                                                        br(),
-                                                       actionButton("na", "Click to generate missing values in the data", 
+                                                       actionButton("na", h5("Click to generate missing values in the data"), 
                                                                     class = "btn-success"),
-                                                       br(),
-                                                       plotOutput("plotna2")),
+                                                       hr(),
+                                                       plotOutput("plotna")),
                                               tabPanel("Imput NA`s", plotOutput("age"))
                                               
                         )
@@ -126,15 +126,14 @@ server <- function(input, output) {
   output$summary <- renderTable(summary(data))
   output$numeric <- renderTable(profiling_num(data))
   
-  output$plotna <- renderPlot(plot_missing(data,group = list(Good = 0.05, OK = 0.4, Bad = 0.8, Remove = 1),
-                                           missing_only = FALSE,
-                                           geom_label_args = list(),
-                                           title = "Missing values in the data set",
-                                           ggtheme = theme_minimal(),
-                                           theme_config = list(legend.position = c("bottom"))))
+  v <- reactiveValues(data = data)
+  
+  observeEvent(input$na, {
+      v$data <- generate_na(data)
+  })
   
   
-  output$plotna2 <- renderPlot(plot_missing(data,group = list(Good = 0.05, OK = 0.4, Bad = 0.8, Remove = 1),
+  output$plotna <- renderPlot(plot_missing(v$data,group = list(Good = 0.05, OK = 0.4, Bad = 0.8, Remove = 1),
                                            missing_only = FALSE,
                                            geom_label_args = list(),
                                            title = "Missing values in the data set",
