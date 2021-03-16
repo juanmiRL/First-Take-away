@@ -36,6 +36,9 @@ data <- as.data.frame(lapply(data, function(x)
 data <- cbind(data,target)
 }
 
+
+
+
 # Define UI 
 ui <- fluidPage(
   
@@ -43,7 +46,7 @@ ui <- fluidPage(
              theme = shinytheme("yeti")
              , #theme
              tabPanel("Data Description",
-                      fluidPage(fileInput("file",h3("Upload the file")), 
+                      fluidPage(fileInput("file",h3("Upload you own file")), 
                                   
                         mainPanel(
                           tabsetPanel(type = "pills", 
@@ -58,28 +61,36 @@ ui <- fluidPage(
              tabPanel("Preprocess",
                       fluidPage(
                         mainPanel(tabsetPanel(type = "pills",
-                                              tabPanel("Transform variable", 
-                                                       wellPanel(
-                                                             selectInput("select", label = h3("Select feature"), 
-                                                                                choices = colnames(data),
-                                                                                selected = 1),
-                                                             br(),
-                                                             checkboxGroupInput("transform",label = h3("Select a type"), choices = list("Factor","Integer","Numeric","Character")),br(),
-                                                             actionButton("Gotransform", "Carry out the transformation", class = "btn-success"),br()
-                                                            
-                                                            
-                                                       )
-                                                                    
-                                                       ),
-                                        
                                               tabPanel("Detect and create NA`s",
                                                        br(),
                                                        br(),
-                                                       actionButton("na", h5("Click to generate missing values in the data"), 
+                                                       p(strong("Note that once you click in the button below the Data Description changes also.")),
+                                                       p(strong("You can click as many time as you wish.")),
+                                                       actionButton("na", "Click to generate missing values in the data", 
+                                                                    class = "btn-success"),
+                                                       actionButton("reset", "Click to restore the initial dataset", 
                                                                     class = "btn-success"),
                                                        hr(),
                                                        plotOutput("plotna")),
-                                              tabPanel("Imput NA`s", plotOutput("age"))
+                                              tabPanel("Imput NA`s"
+                                                       ),
+                                              tabPanel("Transform variable", 
+                                                       br(),
+                                                       p(strong("Note that once you click in the button below the Data Description changes also.")),
+                                                       wellPanel(
+                                                         selectInput("class_var", label = h3("Select feature"), 
+                                                                     choices = colnames(data),
+                                                                     selected = 1),
+                                                         br(),
+                                                         checkboxGroupInput("choose_class",label = h3("Select data type"), 
+                                                                            choices = list(Numeric = "Numeric",Factor = "Factor", Character = "Character")),
+                                                         br(),
+                                                         actionButton("chg_class", "Carry out the transformation", class = "btn-success")
+                                                         
+                                                         
+                                                       )
+                                                       
+                                              )
                                               
                         )
                         
@@ -121,19 +132,37 @@ ui <- fluidPage(
 # Define server logic 
 server <- function(input, output) {
   
-  output$datatable <- DT::renderDT(data)
-  output$data_desc <- renderTable(skimr::skim_without_charts(data))
-  output$summary <- renderTable(summary(data))
-  output$numeric <- renderTable(profiling_num(data))
+  output$datatable <- DT::renderDT(v$data)
+  output$data_desc <- renderTable(skimr::skim_without_charts(v$data))
+  output$summary <- renderTable(summary(v$data))
+  output$numeric <- renderTable(profiling_num(v$data))
   
   v <- reactiveValues(data = data)
+  
+  observeEvent(input$chg_class,{
+    if( input$choose_class == "Numeric"){
+      v$data[, input$class_var] <- as.numeric(v$data[, input$class_var])
+    } else if( input$choose_class == "Factor"){
+      v$data[, input$class_var] <- as.factor(v$data[, input$class_var])
+    } else if( input$choose_class == "Character"){
+      v$data[, input$class_var] <- as.character(v$data[, input$class_var])
+    }
+  })
+  
+  
+  observeEvent(input$gotransform, {
+    v$data %>% mutate(input$select, data)
+  })  
   
   observeEvent(input$na, {
       v$data <- generate_na(data)
   })
   
+  observeEvent(input$reset, {
+    v$data <- data
+  })  
   
-  output$plotna <- renderPlot(plot_missing(v$data,group = list(Good = 0.05, OK = 0.4, Bad = 0.8, Remove = 1),
+  output$plotna <- renderPlot(plot_missing(v$data,group = list(Good = 0.05, Bad = 0.4, Remove = 0.8, Remove = 1),
                                            missing_only = FALSE,
                                            geom_label_args = list(),
                                            title = "Missing values in the data set",
