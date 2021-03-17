@@ -112,13 +112,13 @@ ui <- fluidPage(
                                                sidebarLayout(
                                                   sidebarPanel(
                                                     
-                                                      selectInput("featureplot", label = h3("Select feature"), 
+                                                      selectInput("featureplot", label = h4("Select feature"), 
                                                                   choices = colnames(data),
                                                                   selected = 1),
-                                                      selectInput("plot_var", label = h3("Select type of graph"), 
+                                                      selectInput("plot_var", label = h4("Select type of graph"), 
                                                                   choices = list(Histogram = "Histogram", Boxplot = "Boxplot",Density = "Density"),
                                                                   selected = 1),
-                                                      selectInput("colors", label = h3("Select color"), 
+                                                      selectInput("colors", label = h4("Select color"), 
                                                                   choices = list("SteelBlue","Yellowgreen","Gold","Tomato","Sandybrown","Orange"),
                                                                   selected = 2)
                                                       
@@ -129,7 +129,53 @@ ui <- fluidPage(
                                                
                                                  )),
                                       tabPanel("Bivariate", 
-                                               plotOutput("biplot")),
+                                               sidebarLayout(
+                                                 sidebarPanel(
+                                                   
+                                                   selectInput("featureplot2", label = h4("Select x-axis feature"), 
+                                                               choices = colnames(data),
+                                                               selected = 1),
+                                                   selectInput("featureplot3", label = h4("Select y-axis feature"), 
+                                                               choices = colnames(data),
+                                                               selected = colnames(data)[2]),
+                                              
+                                                   selectInput("plot_var2", label = h4("Select type of graph"), 
+                                                               choices = list( Boxplot = "Boxplot",Scatterplot = "scatterplot"),
+                                                               selected = 1),
+                                                   selectInput("colors2", label = h4("Select color"), 
+                                                               choices = list("SteelBlue","Yellowgreen","Gold","Tomato","Sandybrown","Orange"),
+                                                               selected = 2)
+                                                   
+                                                   
+                                                   
+                                                 ),
+                                                 mainPanel(plotOutput("biplot"))
+                                                 
+                                               )),
+                                      tabPanel("Plots by target", 
+                                               sidebarLayout(
+                                                 sidebarPanel(
+                                                   
+                                                   selectInput("target", label = h4("Select target"), 
+                                                               choices = colnames(data),
+                                                               selected = as.factor(colnames(data)[length(data)])),
+                                                   
+                                                   selectInput("featureplot4", label = h4("Select x-axis feature"), 
+                                                               choices = colnames(data),
+                                                               selected = 1),
+                                                   
+                                              
+                                                   selectInput("plot_var4", label = h4("Select type of graph"), 
+                                                               choices = list( Boxplot = "Boxplot",Barplot = "barplot"),
+                                                               selected = 1)
+                                                   
+                                                   
+                                                   
+                                                   
+                                                 ),
+                                                 mainPanel(plotOutput("biplot2"))
+                                                 
+                                               )),
                                       tabPanel("Dynamic plots", 
                                                plotOutput("dynaplot"))
                                       
@@ -211,12 +257,29 @@ server <- function(input, output) {
   
   output$uniplot <-  renderPlot(
       if(input$plot_var == "Histogram"){
-         ggplot(v$data, aes_string(input$featureplot)) + geom_histogram(fill=input$colors) + ggtitle(paste("Histogram of",input$featureplot)) + theme_minimal()
+         ggplot(v$data, aes_string(input$featureplot)) + geom_histogram(fill=input$colors) + ggtitle(paste("Histogram ",input$featureplot)) + theme_minimal()
       } else if (input$plot_var == "Boxplot"){
-        ggplot(v$data, aes_string(input$featureplot)) + geom_boxplot(fill=input$colors)+ coord_flip() + ggtitle(paste("Boxplot of",input$featureplot)) + theme_minimal()
+        ggplot(v$data, aes_string(input$featureplot)) + geom_boxplot(fill=input$colors)+ coord_flip() + ggtitle(paste("Boxplot ",input$featureplot)) + theme_minimal()
       } 
         else if (input$plot_var == "Density"){
-        ggplot(v$data, aes_string(input$featureplot)) + geom_density(fill=input$colors,stat = "density",alpha=.2)+ ggtitle(paste("Density plot of",input$featureplot)) + theme_minimal()
+        ggplot(v$data, aes_string(input$featureplot)) + geom_density(fill=input$colors,stat = "density",alpha=.2)+ ggtitle(paste("Density plot ",input$featureplot)) + theme_minimal()
+      } 
+  )
+  
+  
+  output$biplot <-  renderPlot(
+      if(input$plot_var2 == "Boxplot"){
+         ggplot(v$data, aes_string(x=input$featureplot2,y=input$featureplot3)) +  geom_boxplot(fill=input$colors2) + ggtitle(paste("Boxplot",input$featureplot2,"vs",input$featureplot3)) + theme_minimal()
+      } else if (input$plot_var2 == "scatterplot"){
+        ggplot(v$data, aes_string(input$featureplot2,input$featureplot3,group=1)) + geom_point(color=input$colors2) + ggtitle(paste("Scatterplot ",input$featureplot2,"vs",input$featureplot3)) + theme_minimal()
+      } 
+  )
+  
+  output$biplot2 <-  renderPlot(
+      if(input$plot_var4 == "Boxplot"){
+         ggplot(v$data, aes_string(x=input$featureplot4,group=input$target,fill=input$target)) +  geom_boxplot() + coord_flip()+ ggtitle(paste("Boxplot",input$featureplot4,"by",input$target)) + theme_minimal()
+      } else if (input$plot_var4 == "barplot"){
+        ggplot(v$data, aes_string(input$featureplot4,group=input$target,fill=input$target)) + geom_bar() + ggtitle(paste("Barplot ",input$featureplot4,"by",input$target)) + theme_minimal()
       } 
   )
   
