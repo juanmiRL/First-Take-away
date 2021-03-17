@@ -43,7 +43,7 @@ data <- cbind(data,target)
 ui <- fluidPage(
   
   navbarPage("Classification Shiny App",
-             theme = shinytheme("yeti")
+             theme = shinytheme("flatly")
              , #theme
              tabPanel("Data Description",
                       fluidPage(
