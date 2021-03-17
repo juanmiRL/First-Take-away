@@ -63,33 +63,43 @@ ui <- fluidPage(
              tabPanel("Preprocess",
                       fluidPage(
                         mainPanel(tabsetPanel(type = "pills",
-                                              tabPanel("Detect and create NA`s",
+                                              tabPanel("Detect and impute NA`s",
                                                        br(),
                                                        br(),
                                                        p(strong("Note that once you click in the button below the Data Description changes also.")),
                                                        p(strong("You can click as many time as you wish.")),
-                                                       wellPanel(
-                                                       actionButton("na", "Click to generate missing values in the data", 
-                                                                    class = "btn-success"),
-                                                       actionButton("reset", "Click to restore the initial dataset", 
-                                                                    class = "btn-success")
-                                                       ),
-                                                       hr(),
-                                                       plotOutput("plotna")),
-                                              tabPanel("Impute NA`s",
-                                                       br(),
-                                                       p(strong("Note that once you click in the button below the Data Description changes also.")),
-                                                       wellPanel(
-                                                       
-                                                       sliderInput("numberk","Number of neighboors in KNN", min = 1,max = 10,value = 5),
-                                                       actionButton("imputena", "Click to impute missing values with mice", 
-                                                                    class = "btn-success")
-                                                       )
-                                                       ),
+                                                       sidebarLayout(
+                                                         sidebarPanel(
+                                                                 
+                                                                 p(strong("You can generate missing values")),
+                                                                 actionButton("na", "Generate NA`s", 
+                                                                              class = "btn-success"),
+                                                                 br(),
+                                                                 br(),
+                                                                 p(strong("You can impute the NA`s using KNN")),
+                                  
+                                                                 sliderInput("numberk","Number of neighboors in KNN", min = 1,max = 10,value = 5),
+                                                                 actionButton("imputena", "Impute NA`S with mice", 
+                                                                              class = "btn-success"),
+                                                                 br(),
+                                                                 br(),
+                                                                 actionButton("reset", "Restore initial dataset", 
+                                                                              class = "btn-success")
+                                                                 ),
+                                                           mainPanel(
+                                                           
+                                                           plotOutput("plotna")))
+                                                           ),
+                                              
                                               tabPanel("Transform variable", 
                                                        br(),
                                                        p(strong("Note that once you click in the button below the Data Description changes also.")),
-                                                       wellPanel(
+                                                       br(),
+                                                       sidebarLayout(
+                                                         sidebarPanel(
+                                                         
+                                                       
+                                                       
                                                          selectInput("class_var", label = h3("Select feature"), 
                                                                      choices = colnames(data),
                                                                      selected = 1),
@@ -97,9 +107,18 @@ ui <- fluidPage(
                                                          checkboxGroupInput("choose_class",label = h3("Select data type"), 
                                                                             choices = list(Numeric = "Numeric",Factor = "Factor", Character = "Character")),
                                                          br(),
-                                                         actionButton("chg_class", "Carry out the transformation", class = "btn-success")
-                                                         
-                                                         
+                                                         actionButton("chg_class", "Carry out transformation", class = "btn-success")
+                                                         ),
+                                                         mainPanel(
+                                                           div(
+                                                             title = "Type of feature selected", status = "primary", solidHeader = TRUE,
+                                                             collapsible = TRUE,
+                                                             h4("The feature selected is:"),
+                                                             textOutput("type"),
+                                                             h4("The type of the feature selected is:"),
+                                                             textOutput("type2")
+                                                           )
+                                                         ) 
                                                        )
                                                        
                                               )
@@ -225,36 +244,60 @@ ui <- fluidPage(
                         )))),
              tabPanel("Predict class new data",
                       fluidPage(
-                        sidebarLayout(
-                          sidebarPanel(
-                            
-                            selectInput("model", label = h4("Select model"), 
-                                        choices = list(RandomForest = "rf_model",LogisticRegression = "logit_model"),
-                                        selected = 1),
-                            
-                            sliderInput("Pregnancies","Pregnancies",min = 0,max = 17,value = 3),
-                            sliderInput("Glucose","Glucose",min = 0,max = 200,value = 120),
-                            sliderInput("BloodPressure","BloodPressure",min = 0,max = 122,value = 70),
-                            sliderInput("SkinThickness","SkinThickness",min = 0,max = 100,value = 20),
-                            sliderInput("Insulin","Insulin",min = 0,max = 850,value = 80),
-                            sliderInput("BMI","BMI",min = 0,max = 70,value = 32),
-                            sliderInput("DiabetesPedigreeFunction","DiabetesPedigreeFunction",min = 0.07,max = 2.42,value = 0.47),
-                            sliderInput("Age","Age",min = 21,max = 82,value = 32)
-                          
-                        ),
-                        
                         mainPanel(
-                          p(strong(Note: "The values for the prediction are 1 = Diabetes and 0 = No Diabetes")),
-                          h3("The predicted class for the new person is:"),
-                          textOutput("predict")
-                        )
+                          tabsetPanel(type = "pills",
+                              tabPanel("Random Forest model",
+                          
+                                sidebarLayout(
+                                sidebarPanel(
+                                  sliderInput("Pregnancies","Pregnancies",min = 0,max = 17,value = 3),
+                                  sliderInput("Glucose","Glucose",min = 0,max = 200,value = 120),
+                                  sliderInput("BloodPressure","BloodPressure",min = 0,max = 122,value = 70),
+                                  sliderInput("SkinThickness","SkinThickness",min = 0,max = 100,value = 20),
+                                  sliderInput("Insulin","Insulin",min = 0,max = 850,value = 80),
+                                  sliderInput("BMI","BMI",min = 0,max = 70,value = 32),
+                                  sliderInput("DiabetesPedigreeFunction","DiabetesPedigreeFunction",min = 0.07,max = 2.42,value = 0.47),
+                                  sliderInput("Age","Age",min = 21,max = 82,value = 32)
+                                
+                              ),
+                              
+                              mainPanel(
+                                p(strong("Note: The values for the prediction are 1 = Diabetes and 0 = No Diabetes")),
+                                h3("The predicted class for the new person is:"),
+                                textOutput("predict")
+                              )
                         
-                        )
-                      )
-             ))
+                            )
+                          ),
+                         tabPanel("Logistic Regression model",
+                                  sidebarLayout(
+                                    sidebarPanel(
+                                      sliderInput("Pregnancies","Pregnancies",min = 0,max = 17,value = 3),
+                                      sliderInput("Glucose","Glucose",min = 0,max = 200,value = 120),
+                                      sliderInput("BloodPressure","BloodPressure",min = 0,max = 122,value = 70),
+                                      sliderInput("SkinThickness","SkinThickness",min = 0,max = 100,value = 20),
+                                      sliderInput("Insulin","Insulin",min = 0,max = 850,value = 80),
+                                      sliderInput("BMI","BMI",min = 0,max = 70,value = 32),
+                                      sliderInput("DiabetesPedigreeFunction","DiabetesPedigreeFunction",min = 0.07,max = 2.42,value = 0.47),
+                                      sliderInput("Age","Age",min = 21,max = 82,value = 32)
+                                      
+                                    ),
+                                    
+                                    mainPanel(
+                                      
+                                      
+                                      p(strong("Note: The values for the prediction are 1 = Diabetes and 0 = No Diabetes")),
+                                      h3("The predicted class for the new person is:"),
+                                      textOutput("predict2"))
+                                    
+                                    
+                                  ))
                       
- 
-)             
+             ))))
+  )
+                      
+)
+           
              
 
                 
@@ -294,6 +337,17 @@ server <- function(input, output) {
   observeEvent(input$reset, {
     v$data <- data
   })  
+  
+ 
+    output$type <- renderText({input$class_var})
+  
+  
+  
+    output$type2 <- renderText({class(v$data[, input$class_var])})
+  
+  
+    
+ 
   
   output$plotna <- renderPlot(plot_missing(v$data,group = list(Good = 0.05, Bad = 0.4, Remove = 0.8, Remove = 1),
                                            missing_only = FALSE,
@@ -359,30 +413,28 @@ server <- function(input, output) {
   output$varimp <- renderPlot(plot(caret::varImp(logit_model)))
   output$varimp2 <- renderPlot(plot(caret::varImp(rf_model)))
   
-  
-  
+
   output$predict <- renderText(
-    if(input$model == "rf_model"){
-      predict(rf_model,data.frame(Pregnancies = input$Pregnancies, 
-                                         Glucose = input$Glucose,
-                                         BloodPressure = input$BloodPressure,
-                                         SkinThickness = input$SkinThickness,
-                                         Insulin = input$Insulin,
-                                         BMI = input$BMI,
-                                         DiabetesPedigreeFunction = input$DiabetesPedigreeFunction, 
-                                         Age = input$Age))
-  } else if (input$model == "logit_model"){
-    predict(logit_model,data.frame(Pregnancies = input$Pregnancies, 
-                                          Glucose = input$Glucose,
-                                          BloodPressure = input$BloodPressure,
-                                          SkinThickness = input$SkinThickness,
-                                          Insulin = input$Insulin,
-                                          BMI = input$BMI,
-                                          DiabetesPedigreeFunction = input$DiabetesPedigreeFunction, 
-                                          Age = input$Age))
-  } 
-)
+    predict(rf_model,data.frame(Pregnancies = input$Pregnancies, 
+                                Glucose = input$Glucose,
+                                BloodPressure = input$BloodPressure,
+                                SkinThickness = input$SkinThickness,
+                                Insulin = input$Insulin,
+                                BMI = input$BMI,
+                                DiabetesPedigreeFunction = input$DiabetesPedigreeFunction, 
+                                Age = input$Age))
+    )
   
+  output$predict2 <- renderText(
+    predict(logit_model,data.frame(Pregnancies = input$Pregnancies, 
+                                Glucose = input$Glucose,
+                                BloodPressure = input$BloodPressure,
+                                SkinThickness = input$SkinThickness,
+                                Insulin = input$Insulin,
+                                BMI = input$BMI,
+                                DiabetesPedigreeFunction = input$DiabetesPedigreeFunction, 
+                                Age = input$Age)
+  ))
   
   
 }
