@@ -9,15 +9,13 @@ library(shinythemes)
 library(plotly)
 library(DT)
 library(reticulate)
+library(htmlwidgets)
 
 
 #devtools::install_git("https://github.com/bernardo-dauria/kaggler.git")
 
-#library(kaggler)
-#kgl_auth(username:"juannmi86",key:"8e8a6dd50edcd417a545f9d8b1c26765")
-
-#reticulate::use_python("C:/Users/juanm/AppData/Local/r-miniconda/envs/r-reticulate/python.exe")
-#reticulate::py_config()
+library(kaggler)
+#kgl_auth("juannmi86","8e8a6dd50edcd417a545f9d8b1c26765")
 #kaggle <- import("kaggle")
 #kaggle$api$authenticate()
 #kaggle$api$dataset_download_files("mathchi/diabetes-data-set", "diabetes.csv", unzip = T)
@@ -66,10 +64,12 @@ ui <- fluidPage(
                                                        br(),
                                                        p(strong("Note that once you click in the button below the Data Description changes also.")),
                                                        p(strong("You can click as many time as you wish.")),
+                                                       wellPanel(
                                                        actionButton("na", "Click to generate missing values in the data", 
                                                                     class = "btn-success"),
                                                        actionButton("reset", "Click to restore the initial dataset", 
-                                                                    class = "btn-success"),
+                                                                    class = "btn-success")
+                                                       ),
                                                        hr(),
                                                        plotOutput("plotna")),
                                               tabPanel("Impute NA`s",
@@ -106,8 +106,37 @@ ui <- fluidPage(
              
              tabPanel("Dynamic Plots",
                       fluidPage(
+                        mainPanel(
+                          tabsetPanel(type = "pills",
+                                      tabPanel("Univariate", 
+                                               sidebarLayout(
+                                                  sidebarPanel(
+                                                    
+                                                      selectInput("featureplot", label = h3("Select feature"), 
+                                                                  choices = colnames(data),
+                                                                  selected = 1),
+                                                      selectInput("plot_var", label = h3("Select type of graph"), 
+                                                                  choices = list(Histogram = "Histogram", Boxplot = "Boxplot",Density = "Density"),
+                                                                  selected = 1),
+                                                      selectInput("colors", label = h3("Select color"), 
+                                                                  choices = list("SteelBlue","Yellowgreen","Gold","Tomato","Sandybrown","Orange"),
+                                                                  selected = 2)
+                                                      
+                                                      
+                                                    
+                                                  ),
+                                                  mainPanel(plotOutput("uniplot"))
+                                               
+                                                 )),
+                                      tabPanel("Bivariate", 
+                                               plotOutput("biplot")),
+                                      tabPanel("Dynamic plots", 
+                                               plotOutput("dynaplot"))
+                                      
+                                      
+                          )
                         
-                        )),
+                        ))),
              tabPanel("Classification models",
                       fluidPage(
                         mainPanel(
@@ -130,10 +159,10 @@ ui <- fluidPage(
                         )
                         )
                       )
-)
+ 
+)             
              
-             
- # navbarPage
+ 
   
 
 
@@ -177,8 +206,19 @@ server <- function(input, output) {
                                            title = "Missing values in the data set",
                                            ggtheme = theme_minimal(),
                                            theme_config = list(legend.position = c("bottom"))))
-  cols_to_change <- reactive({colnames(data)})
   
+ 
+  
+  output$uniplot <-  renderPlot(
+      if(input$plot_var == "Histogram"){
+         ggplot(v$data, aes_string(input$featureplot)) + geom_histogram(fill=input$colors) + ggtitle(paste("Histogram of",input$featureplot)) + theme_minimal()
+      } else if (input$plot_var == "Boxplot"){
+        ggplot(v$data, aes_string(input$featureplot)) + geom_boxplot(fill=input$colors)+ coord_flip() + ggtitle(paste("Boxplot of",input$featureplot)) + theme_minimal()
+      } 
+        else if (input$plot_var == "Density"){
+        ggplot(v$data, aes_string(input$featureplot)) + geom_density(fill=input$colors,stat = "density",alpha=.2)+ ggtitle(paste("Density plot of",input$featureplot)) + theme_minimal()
+      } 
+  )
   
   
   
