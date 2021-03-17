@@ -225,20 +225,39 @@ ui <- fluidPage(
                         )))),
              tabPanel("Predict class new data",
                       fluidPage(
-                        
+                        sidebarLayout(
+                          sidebarPanel(
+                            
+                            selectInput("model", label = h4("Select model"), 
+                                        choices = list(RandomForest = "rf_model",LogisticRegression = "logit_model"),
+                                        selected = 1),
+                            
+                            sliderInput("Pregnancies","Pregnancies",min = 0,max = 17,value = 3),
+                            sliderInput("Glucose","Glucose",min = 0,max = 200,value = 120),
+                            sliderInput("BloodPressure","BloodPressure",min = 0,max = 122,value = 70),
+                            sliderInput("SkinThickness","SkinThickness",min = 0,max = 100,value = 20),
+                            sliderInput("Insulin","Insulin",min = 0,max = 850,value = 80),
+                            sliderInput("BMI","BMI",min = 0,max = 70,value = 32),
+                            sliderInput("DiabetesPedigreeFunction","DiabetesPedigreeFunction",min = 0.07,max = 2.42,value = 0.47),
+                            sliderInput("Age","Age",min = 21,max = 82,value = 32)
+                          
                         ),
                         
                         mainPanel(
-                          h3("The class of the new data is:"),
+                          p(strong(Note: "The values for the prediction are 1 = Diabetes and 0 = No Diabetes")),
+                          h3("The predicted class for the new person is:"),
                           textOutput("predict")
                         )
+                        
                         )
-             )
+                      )
+             ))
                       
  
 )             
              
- 
+
+                
   
 
 
@@ -342,6 +361,27 @@ server <- function(input, output) {
   
   
   
+  output$predict <- renderText(
+    if(input$model == "rf_model"){
+      predict(rf_model,data.frame(Pregnancies = input$Pregnancies, 
+                                         Glucose = input$Glucose,
+                                         BloodPressure = input$BloodPressure,
+                                         SkinThickness = input$SkinThickness,
+                                         Insulin = input$Insulin,
+                                         BMI = input$BMI,
+                                         DiabetesPedigreeFunction = input$DiabetesPedigreeFunction, 
+                                         Age = input$Age))
+  } else if (input$model == "logit_model"){
+    predict(logit_model,data.frame(Pregnancies = input$Pregnancies, 
+                                          Glucose = input$Glucose,
+                                          BloodPressure = input$BloodPressure,
+                                          SkinThickness = input$SkinThickness,
+                                          Insulin = input$Insulin,
+                                          BMI = input$BMI,
+                                          DiabetesPedigreeFunction = input$DiabetesPedigreeFunction, 
+                                          Age = input$Age))
+  } 
+)
   
   
   
