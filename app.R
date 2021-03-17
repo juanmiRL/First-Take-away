@@ -233,7 +233,10 @@ ui <- fluidPage(
                           tabsetPanel(type = "pills",
                                       tabPanel("Logistic Regression", 
                                                br(),
+                                               h5("In the table below you can see the confussion matrix of the model. In it, the acurracy, specificity, sensitivity and other measures appear that tell us how well the model classifies based on training and testing."),
+                                               hr(),
                                                p(strong("Confussion matrix for the Logistic model")),
+                                               hr(),
                                                br(),
                                                 
                                                  verbatimTextOutput("Modelsummary")
@@ -244,7 +247,10 @@ ui <- fluidPage(
                                 
                                       tabPanel("Random Forest",
                                                br(),
+                                               h5("In the table below you can see the confussion matrix of the model. In it, the acurracy, specificity, sensitivity and other measures appear that tell us how well the model classifies based on training and testing."),
+                                               hr(),
                                                p(strong("Confussion matrix for the Random Forest model")),
+                                               hr(),
                                                br(),
                                                verbatimTextOutput("Modelsummary2")
                                       ),
@@ -283,7 +289,9 @@ ui <- fluidPage(
                               ),
                               
                               mainPanel(
+                                br(),
                                 p(strong("Note: The values for the prediction are 1 = Diabetes and 0 = No Diabetes")),
+                                hr(),
                                 h3("The predicted class for the new person is:"),
                                 textOutput("predict")
                               )
@@ -314,7 +322,11 @@ ui <- fluidPage(
                                     
                                   ))
                       
-             ))))
+             )))),tabPanel("Download report",
+                           br(),
+                           hr(),
+                           p(strong("You can download the report just clicking on the button below")),
+                           downloadButton("report", "Generate report"))
   )
                       
 )
@@ -467,6 +479,28 @@ server <- function(input, output) {
                                 Age = input$Age)
   ))
   
+  output$report <- downloadHandler(
+    
+    filename = "report.pdf",
+    content = function(file) {
+      tempReport <- file.path(tempdir(), "report.Rmd")
+      file.copy("report.Rmd", tempReport, overwrite = TRUE)
+      
+      # Set up parameters to pass to Rmd document
+      params <- list(
+        data = isolate(v$data)
+        
+      )
+      
+      # Knit the document, passing in the `params` list, and eval it in a
+      # child of the global environment (this isolates the code in the document
+      # from the code in this app).
+      rmarkdown::render(tempReport, output_file = file,
+                        params = params,
+                        envir = new.env(parent = globalenv())
+      )
+    }
+  )
   
 }
 
