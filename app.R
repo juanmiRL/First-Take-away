@@ -200,12 +200,33 @@ ui <- fluidPage(
                                                  
                                                )),
                                       tabPanel("Dynamic plots", 
-                                               plotOutput("dynaplot"))
+                                               sidebarLayout(
+                                                 sidebarPanel(
+                                                   
+                                                   selectInput("featureplot5", label = h4("Select x-axis feature"), 
+                                                               choices = colnames(data),
+                                                               selected = 1),
+                                                   selectInput("featureplot6", label = h4("Select y-axis feature"), 
+                                                               choices = colnames(data),
+                                                               selected = colnames(data)[2]),
+                          
+                                                       
+                                                       selectInput("plot_var3", label = h4("Select type of graph"), 
+                                                                   choices = list( Boxplot = "Boxplot",Scatterplot = "scatterplot"),
+                                                                   selected = 1),
+                                                       selectInput("colors3", label = h4("Select color"), 
+                                                                   choices = list("SteelBlue","Yellowgreen","Gold","Tomato","Sandybrown","Orange"),
+                                                                   selected = 2)
+                                                   
+                                                   
+                                                 ),
+                                                 mainPanel(
+                                               plotly::plotlyOutput("dynaplot"))
                                       
-                                      
+                                               )
                           )
                         
-                        ))),
+                        )))),
              tabPanel("Classification models",
                       fluidPage(
                         mainPanel(
@@ -385,6 +406,16 @@ server <- function(input, output) {
         ggplot(v$data, aes_string(input$featureplot4,group=input$target,fill=input$target)) + geom_bar() + ggtitle(paste("Barplot ",input$featureplot4,"by",input$target)) + theme_minimal()
       } 
   )
+  
+  
+  output$dynaplot <- plotly::renderPlotly(
+    if(input$plot_var3 == "Boxplot"){
+      ggplot(v$data, aes_string(x=input$featureplot5,y=input$featureplot6)) +  geom_boxplot(fill=input$colors3) + ggtitle(paste("Boxplot",input$featureplot5,"vs",input$featureplot6)) + theme_minimal()
+    } else if (input$plot_var3 == "scatterplot"){
+      ggplot(v$data, aes_string(input$featureplot5,input$featureplot6,group=1)) + geom_point(color=input$colors3) + ggtitle(paste("Scatterplot ",input$featureplot5,"vs",input$featureplot6)) + theme_minimal()
+    } 
+  )
+  
   
   # split data 
   set.seed(100351855)
