@@ -1,4 +1,4 @@
-#library(tidyverse)
+library(tidyverse)
 library(shiny)
 library(mice)
 library(dplyr)
@@ -10,6 +10,8 @@ library(plotly)
 library(DT)
 library(reticulate)
 library(htmlwidgets)
+library(caret)
+
 
 
 #devtools::install_git("https://github.com/bernardo-dauria/kaggler.git")
@@ -44,7 +46,9 @@ ui <- fluidPage(
              theme = shinytheme("yeti")
              , #theme
              tabPanel("Data Description",
-                      fluidPage(fileInput("file",h3("Upload you own file")), 
+                      fluidPage(
+                        a("Please wait, the app is loading.."),
+                        fileInput("file",h3("Upload you own file")), 
                                   
                         mainPanel(
                           tabsetPanel(type = "pills", 
@@ -187,13 +191,38 @@ ui <- fluidPage(
                       fluidPage(
                         mainPanel(
                           tabsetPanel(type = "pills",
-                                      tabPanel("Adaboost", verbatimTextOutput("Modelsummary")),
-                                      tabPanel("Random Forest", plotOutput("Modelplot1")),
-                                      tabPanel("SVM", plotOutput("Modelplot2"))
+                                      tabPanel("Logistic Regression", 
+                                               br(),
+                                               p(strong("Confussion matrix for the Logistic model")),
+                                               br(),
+                                                
+                                                 verbatimTextOutput("Modelsummary")
+                                              
+                                                 
+                                               ),   
+                                               
+                                
+                                      tabPanel("Random Forest",
+                                               br(),
+                                               p(strong("Confussion matrix for the Random Forest model")),
+                                               br(),
+                                               verbatimTextOutput("Modelsummary2")
+                                      ),
+                                              
+                                      tabPanel("Variable importance",
+                                               br(),
+                                               br(),
+                                               p(strong("Variable importance plot for the Logistic Regression model")),
+                                               br(),
+                                               plotOutput("varimp"),
+                                               br(),
+                                               p(strong("Variable importance plot for the Random Forest model")),
+                                               br(),
+                                               plotOutput("varimp2")
                                       
-                                      
-                          )
-                        ))),
+                                      )           
+                          
+                        )))),
              tabPanel("Predict class new data",
                       fluidPage(
                         
@@ -204,7 +233,8 @@ ui <- fluidPage(
                           textOutput("predict")
                         )
                         )
-                      )
+             )
+                      
  
 )             
              
@@ -282,6 +312,36 @@ server <- function(input, output) {
         ggplot(v$data, aes_string(input$featureplot4,group=input$target,fill=input$target)) + geom_bar() + ggtitle(paste("Barplot ",input$featureplot4,"by",input$target)) + theme_minimal()
       } 
   )
+  
+  # split data 
+  set.seed(100351855)
+  split <- caret::createDataPartition(data[,length(data)], p = 0.7, list = FALSE)
+  data_train <- data[split,]
+  data_train[,length(data_train)] <- as.factor(data_train[,length(data_train)]) 
+  data_test <- data[-split,]
+  data_test2 <- data_test[,-length(data)]
+  target <- data_test[,length(data)]
+  name_target <- colnames(data_train)[length(data_train)]
+  rf_model <- caret::train(Outcome~., 
+                           method = "rf",
+                           data = data_train,
+                           metric = "Accuracy"
+                           )
+  logit_model <- caret::train(Outcome~., 
+                              method = "glmnet",
+                              data = data_train,
+                              metric = "Accuracy"
+  )
+  
+  
+  
+  output$Modelsummary <- renderPrint(caret::confusionMatrix(predict(logit_model,data_test2),as.factor(target)))
+  output$Modelsummary2 <- renderPrint(caret::confusionMatrix(predict(rf_model,data_test2),as.factor(target)))
+  output$varimp <- renderPlot(plot(caret::varImp(logit_model)))
+  output$varimp2 <- renderPlot(plot(caret::varImp(rf_model)))
+  
+  
+  
   
   
   
