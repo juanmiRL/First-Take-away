@@ -260,6 +260,16 @@ ui <- fluidPage(
                                                verbatimTextOutput("Modelsummary2")
                                       ),
                                               
+                                      tabPanel("Performance models",
+                                               br(),
+                                               br(),
+                                               p(strong("Performance comparative dynamic plot for models")),
+                                               br(),
+                                               plotly::plotlyOutput("fig")
+                                               
+                                      
+                                      ),
+                                      
                                       tabPanel("Variable importance",
                                                br(),
                                                br(),
@@ -468,6 +478,54 @@ server <- function(input, output) {
   output$Modelsummary2 <- renderPrint(caret::confusionMatrix(predict(rf_model,data_test2),as.factor(target)))
   output$varimp <- renderPlot(plot(caret::varImp(logit_model)))
   output$varimp2 <- renderPlot(plot(caret::varImp(rf_model)))
+  
+  rf_conf <- caret::confusionMatrix(predict(rf_model,data_test2),as.factor(target))
+  logit_conf <- caret::confusionMatrix(predict(logit_model,data_test2),as.factor(target))
+  
+  acc_rf <- as.numeric(rf_conf$overall[1])
+  kappa_rf <- as.numeric(rf_conf$overall[2])
+  sensi_rf <- as.numeric(rf_conf$byClass[1])
+  specf_rf <- as.numeric(rf_conf$byClass[2])
+  prec_rf <- as.numeric(rf_conf$byClass[5])
+  prev_rf <- as.numeric(rf_conf$byClass[8])
+  
+  acc_logit <- as.numeric(logit_conf$overall[1])
+  kappa_logit <- as.numeric(logit_conf$overall[2])
+  sensi_logit <- as.numeric(logit_conf$byClass[1])
+  specf_logit <- as.numeric(logit_conf$byClass[2])
+  prec_logit <- as.numeric(logit_conf$byClass[5])
+  prev_logit <- as.numeric(logit_conf$byClass[8])
+  
+  
+  
+  fig <- plot_ly(
+    type = 'scatterpolar',
+    fill = 'toself'
+  ) 
+  fig <- fig %>%
+    add_trace(
+      r = c(acc_rf, kappa_rf, sensi_rf, specf_rf, prec_rf, prev_rf),
+      theta = c('Accuracy','Kappa','Sensitivity', 'Specificity', 'Precision', 'Prevalence'),
+      name = 'Random Forest'
+    ) 
+  fig <- fig %>%
+    add_trace(
+      r = c(acc_logit, kappa_logit, sensi_logit, specf_logit, prec_logit, prev_logit),
+      theta = c('Accuracy','Kappa','Sensitivity', 'Specificity', 'Precision', 'Prevalence'),
+      name = 'Logistic Regression'
+    ) 
+  
+  fig <- fig %>%
+    layout(
+      polar = list(
+        radialaxis = list(
+          visible = "legendosly",
+          range = c(0,1)
+        )
+      )
+    )
+  
+  output$fig <- renderPlotly(fig)
   
 
   output$predict <- renderText(
