@@ -11,6 +11,7 @@ library(DT)
 library(reticulate)
 library(htmlwidgets)
 library(caret)
+library(shinydashboard)
 
 
 
@@ -45,11 +46,41 @@ ui <- fluidPage(
   navbarPage("Classification Shiny App",
              theme = shinytheme("flatly")
              , #theme
+             tabPanel("Scenario",
+                      fluidPage(
+                        box(p(h4("Context"),
+                              "This dataset is originally from the National Institute of Diabetes and Digestive and Kidney Diseases. The objective is to predict based on diagnostic measurements whether a patient has diabetes.
+                              
+                              ",h4("Content"),
+                              "Several constraints were placed on the selection of these instances from a larger database. In particular, all patients here are females at least 21 years old of Pima Indian heritage.
+                              ",
+                              br(),
+                              strong("- Pregnancies:")," Number of times pregnant",
+                              br(),
+                              strong("- Glucose:")," Plasma glucose concentration a 2 hours in an oral glucose tolerance test",
+                              br(),
+                              strong("- BloodPressure:")," Diastolic blood pressure (mm Hg)",
+                              br(),
+                              strong("- SkinThickness:"),"Triceps skin fold thickness (mm)",
+                              br(),
+                              strong("- Insulin:")," 2-Hour serum insulin (mu U/ml)",
+                              br(),
+                              strong("- BMI:"),"Body mass index (weight in kg/(height in m)^2)",
+                              br(),
+                              strong("- DiabetesPedigreeFunction:")," Diabetes pedigree function",
+                              br(),
+                              strong("- Age:"),"Age (years)",
+                              br(),
+                              strong("- Outcome:"),"Class variable (0 or 1)"),
+                            title = "Brief introduction", collapsible = TRUE,status  = "success",solidHeader = TRUE,collapsed = TRUE),
+                        mainPanel())
+             ),
              tabPanel("Data Description",
                       fluidPage(
                         a("Please wait, the app is loading.."),
-                        fileInput("file",h3("Upload you own file")), 
-                                  
+                        br(),
+                        br(),
+                       
                         mainPanel(
                           tabsetPanel(type = "pills", 
                                       tabPanel("Table",br(), DT::dataTableOutput("datatable")),
