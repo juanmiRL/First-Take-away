@@ -172,7 +172,9 @@ ui <- fluidPage(
                                                    
                                                    
                                                  ),
-                                                 mainPanel(plotOutput("biplot"))
+                                                 mainPanel(plotOutput("biplot",click = "plot_click"),
+                                                           br(),
+                                                           tableOutput("tableplot"))
                                                  
                                                )),
                                       tabPanel("Plots by target", 
@@ -196,7 +198,9 @@ ui <- fluidPage(
                                                    
                                                    
                                                  ),
-                                                 mainPanel(plotOutput("biplot2"))
+                                                 mainPanel(
+                                                   plotOutput("biplot2")  
+                                                   )
                                                  
                                                )),
                                       tabPanel("Dynamic plots", 
@@ -221,7 +225,8 @@ ui <- fluidPage(
                                                    
                                                  ),
                                                  mainPanel(
-                                               plotly::plotlyOutput("dynaplot"))
+                                               plotly::plotlyOutput("dynaplot")
+                                               )
                                       
                                                )
                           )
@@ -314,7 +319,7 @@ ui <- fluidPage(
                                     
                                     mainPanel(
                                       
-                                      
+                                      br(),
                                       p(strong("Note: The values for the prediction are 1 = Diabetes and 0 = No Diabetes")),
                                       h3("The predicted class for the new person is:"),
                                       textOutput("predict2"))
@@ -428,6 +433,14 @@ server <- function(input, output) {
     } 
   )
   
+  names <- colnames(data)
+  
+  output$tableplot <- renderTable(
+    nearPoints(v$data %>% select(one_of(names)),
+               input$plot_click, threshold = 100, maxpoints = 3,
+               addDist = TRUE)
+  )
+  
   
   # split data 
   set.seed(100351855)
@@ -486,15 +499,13 @@ server <- function(input, output) {
       tempReport <- file.path(tempdir(), "report.Rmd")
       file.copy("report.Rmd", tempReport, overwrite = TRUE)
       
-      # Set up parameters to pass to Rmd document
+      
       params <- list(
         data = isolate(v$data)
         
       )
       
-      # Knit the document, passing in the `params` list, and eval it in a
-      # child of the global environment (this isolates the code in the document
-      # from the code in this app).
+      
       rmarkdown::render(tempReport, output_file = file,
                         params = params,
                         envir = new.env(parent = globalenv())
