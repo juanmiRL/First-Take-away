@@ -40,6 +40,7 @@ data <- cbind(data,target)
 
 
 
+
 # Define UI 
 ui <- fluidPage(
   
@@ -48,12 +49,22 @@ ui <- fluidPage(
              , #theme
              tabPanel("Scenario",
                       fluidPage(
+                        a("Please wait, the app is loading.."),
+                        br(),
+                        br(),
+                        splitLayout(cellWidths = c("65%", "35%"),
                         box(p(h4("Context"),
-                              "This dataset is originally from the National Institute of Diabetes and Digestive and Kidney Diseases. The objective is to predict based on diagnostic measurements whether a patient has diabetes.
+                              "This dataset is originally from the National Institute of Diabetes and Digestive and Kidney Diseases.",
+                              br(),
+                              "The objective is to predict based on diagnostic measurements whether a patient has diabetes.",
+                              br(),
+                              h4("Content"),
+                              "Several constraints were placed on the selection of these instances from a larger database.",
                               
-                              ",h4("Content"),
-                              "Several constraints were placed on the selection of these instances from a larger database. In particular, all patients here are females at least 21 years old of Pima Indian heritage.
+                              br(),
+                              "In particular, all patients here are females at least 21 years old of Pima Indian heritage.
                               ",
+                              br(),
                               br(),
                               strong("- Pregnancies:")," Number of times pregnant",
                               br(),
@@ -72,13 +83,13 @@ ui <- fluidPage(
                               strong("- Age:"),"Age (years)",
                               br(),
                               strong("- Outcome:"),"Class variable (0 or 1)"),
-                            title = "Brief introduction", collapsible = TRUE,status  = "success",solidHeader = TRUE,collapsed = TRUE),
-                        mainPanel())
+                            title = "Brief introduction", collapsible = FALSE,status  = "success",solidHeader = TRUE,collapsed = FALSE)
+                        ,
+                         htmlOutput("picture")))
              ),
              tabPanel("Data Description",
                       fluidPage(
-                        a("Please wait, the app is loading.."),
-                        br(),
+                        
                         br(),
                        
                         mainPanel(
@@ -385,6 +396,10 @@ ui <- fluidPage(
 
 # Define server logic 
 server <- function(input, output) {
+  
+  src = "https://raw.githubusercontent.com/juanmiRL/First-Take-away/main/diabetes.jpg"
+  output$picture<-renderText({c('<img src="',src,'">')})
+  
   
   output$datatable <- DT::renderDT(v$data)
   output$data_desc <- renderTable(skimr::skim_without_charts(v$data))
